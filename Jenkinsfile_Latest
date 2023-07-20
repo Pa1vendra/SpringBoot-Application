@@ -1,0 +1,44 @@
+/*
+Spring Boot Application
+*/
+
+pipeline {
+    agent any
+
+    environment {
+        AWS_DEFAULT_REGION = 'ap-south-1'
+        registry = '747533830207.dkr.ecr.ap-south-1.amazonaws.com/test'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                cleanWs()
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Pa1vendra/SpringBoot-Application.git']])
+            }
+        }
+
+        stage('Build and Push Image to ECR') {
+            steps {
+                script {
+                    docker.build registry
+                }
+                sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 747533830207.dkr.ecr.ap-south-1.amazonaws.com'
+                sh 'docker push 747533830207.dkr.ecr.ap-south-1.amazonaws.com/test:latest'
+            }   
+        }
+
+        stage('Deploy to K8S') {
+            steps {
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'K8S', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                    //sh 'kubectl apply -f eks-deploy-k8s.yaml'
+                    sh 'helm upgrade --install springboot springboot_helm -f springboot_helm/values.yaml'
+                    echo " Creating k8s resources... "
+                    sleep 15
+                    sh """ kubectl get events --sort-by=.metadata.creationTimestamp | grep -vE 'Pulling|Pulled|Created|Started' | tail """
+                    sh """ kubectl get svc,deploy,po """
+                }
+            }
+        }
+    }
+}
