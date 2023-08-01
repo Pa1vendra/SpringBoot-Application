@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = 'ap-south-1'
-        registry = '747533830207.dkr.ecr.ap-south-1.amazonaws.com/test'
+        registry = '747533830207.dkr.ecr.us-east-1.amazonaws.com/spring-boot'
     }
 
     stages {
