@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=builder /app/target/springbootApp.jar .
 
 # Expose the port on which the Spring Boot application listens
-EXPOSE 80
+EXPOSE 8085
 
 # Start the Spring Boot application
 CMD ["java", "-jar", "springbootApp.jar"]
